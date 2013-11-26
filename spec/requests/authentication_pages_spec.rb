@@ -14,6 +14,9 @@ describe "Authentication" do
   describe "signin" do
     before { visit signin_path }
 
+    it { should_not have_link('Profile') }
+    it { should_not have_link('Settings') }
+
     describe "with invalid information" do
       before { click_button "Sign in" }
 
@@ -29,9 +32,7 @@ describe "Authentication" do
     describe "with valid information" do
       let(:user) { FactoryGirl.create(:user) }
       before do
-        fill_in "Email",    with: user.email.upcase
-        fill_in "Password", with: user.password
-        click_button "Sign in"
+        sign_in(user)
       end
 
       it { should have_title(user.name) }
@@ -56,9 +57,7 @@ describe "Authentication" do
       describe "when attempting to visit a protected page" do
         before do
           visit edit_user_path(user)
-          fill_in "Email",      with: user.email
-          fill_in "Password",   with: user.password
-          click_button "Sign in"
+          sign_in(user)
         end
 
         describe "after signing in" do
@@ -114,6 +113,25 @@ describe "Authentication" do
       describe "submitting a DELETE request to the Users#destroy action" do
         before { delete user_path(user) }
         specify { expect(response).to redirect_to(root_url) }
+      end
+
+      describe "trying to access the sign up form" do
+        before { visit signup_path }
+        it { should have_selector('h1', 'Welcome to the Sample App') }
+      end
+
+      describe "submitting a POST request to the Users#create action" do
+        before { post users_path(user) }
+        specify { expect(response).to redirect_to(root_url) }
+      end
+    end
+
+    describe "as admin user" do
+      let(:admin) { FactoryGirl.create(:admin) }
+
+      before { sign_in admin, no_capybara: true }
+      it "can't destroy self by submitting a DELETE request to Users#destroy for own user" do
+        expect { delete user_path(admin) }.not_to change(User, :count)
       end
     end
   end

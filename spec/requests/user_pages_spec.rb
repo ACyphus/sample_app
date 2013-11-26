@@ -70,6 +70,10 @@ describe "UserPages" do
   describe "signup" do
     before { visit signup_path }
 
+    describe "page" do
+      it { should have_button('Create my account') }
+    end
+
     let(:submit) { "Create my account" }
 
     describe "with invalid information" do
@@ -118,6 +122,7 @@ describe "UserPages" do
     describe "page" do
       it { should have_content("Update your profile") }
       it { should have_title("Edit user") }
+      it { should have_button('Save changes') }
       it { should have_link('change', href: 'http://gravatar.com/emails') }
     end
 
@@ -144,6 +149,18 @@ describe "UserPages" do
       specify { expect(user.reload.name).to eq new_name }
       specify { expect(user.reload.email).to eq new_email }
     end
-  end
 
+    describe "forbidden attributes" do
+      let(:params) do
+        { user: { admin: true, password: user.password,
+                  password_confirmation: user.password } }
+      end
+
+      before do
+        sign_in user, no_capybara: true
+        patch user_path(user), params
+      end
+      specify { expect(user.reload).not_to be_admin }
+    end
+  end
 end
