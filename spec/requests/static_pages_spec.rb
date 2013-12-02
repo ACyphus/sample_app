@@ -31,6 +31,14 @@ describe "Static pages" do
           expect(page).to have_selector("li##{item.id}", text: item.content)
         end
       end
+
+      it "should render the number of current_users microposts" do
+        if user.microposts.count == 1
+          expect(page).to have_content("#{user.microposts.count} micropost")
+        else
+          expect(page).to have_content("#{user.microposts.count} microposts")
+        end
+      end
     end
   end
 
